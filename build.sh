@@ -70,6 +70,22 @@ function copy_custom_rpms() {
   fi
 }
 
+function download_latest_rpms() {
+  RPM_COUNT=$(ls ${ISO_MOUNT_DIR}/Packages/*.rpm 2>/dev/null|wc -l)
+  if [ "${RPM_COUNT}" != "0" ] ; then
+    show_msg "Downloading latest rpm packages(${RPM_COUNT}) ..."
+
+    rmps_dir=${ISO_MOUNT_DIR}/Packages
+    #rpm -q --qf "%{NAME}\n" -p *.rpm
+    #rmps=$(rpm -q --qf "%{NAME} " -p "$rmps_dir"/*.rpm)
+    #printf "%s\n" "${rmps[@]}"
+    #yumdownloader --downloadonly --downloaddir=${ISO_CUSTOM_DIR}/Packages/ $(rpm -q --qf "%{NAME} " -p "$rmps_dir"/*.rpm)
+    #yumdownloader -x \*i686 -archlist=x86_64,noarch --destdir=${ISO_CUSTOM_DIR}/Packages/ $(rpm -q --qf "%{NAME} " -p "$rmps_dir"/*.rpm)
+    #yumdownloader -x "*i686" --archlist=x86_64,noarch --destdir=${ISO_CUSTOM_DIR}/Packages/ $(rpm -q --qf "%{NAME} " -p "$rmps_dir"/*.rpm)
+    yumdownloader -x "*i686" --archlist=x86_64,noarch --destdir=${RPM_CUSTOM_DIR} $(rpm -q --qf "%{NAME} " -p "$rmps_dir"/*.rpm)
+  fi
+}
+
 function prepare_workdir() {
   download_official_iso
 
@@ -86,7 +102,8 @@ function prepare_workdir() {
 
   # copy ISO content
   mount -o loop -r ${OFFICIAL_ISO} ${ISO_MOUNT_DIR}
-  rsync -Pazq --exclude=TRANS.TBL ${ISO_MOUNT_DIR}/ ${ISO_CUSTOM_DIR}
+  rsync -Pazq --exclude={"TRANS.TBL","Packages/*"} ${ISO_MOUNT_DIR}/ ${ISO_CUSTOM_DIR}
+  download_latest_rpms
   umount ${ISO_MOUNT_DIR}
   rm -rf ${ISO_MOUNT_DIR}
 }
